@@ -771,7 +771,7 @@ class DynamicMenu {
         }
         //
         if ($this->navMode == 'get') {
-            if (false && is_dir(getLang().'/'.$li['file'])) {
+            if (false && is_dir(self::getLang().'/'.$li['file'])) {
                 return self::addToQS('type',$li['file'], self::addToQS('id',$li['file'],$qs));
             }
             #echo $li['dir'];
@@ -1047,14 +1047,14 @@ class DynamicMenu {
       if (is_dir($this->base.'/'.$li['pathTo'])) {
         $dirfound = $this->base.'/'.$li['pathTo'];
       }
-      elseif (is_dir($this->base.getLang().'/'.$li['pathTo'])) {
-        $dirfound = $this->base.getLang().'/'.$li['pathT'];
+      elseif (is_dir($this->base.(self::getLang()).'/'.$li['pathTo'])) {
+        $dirfound = $this->base.(self::getLang()).'/'.$li['pathTo'];
       }
       elseif (is_dir(dirname(__FILE__).'/'.$li['pathTo'])) {
         $dirfound = dirname(__FILE__).'/'.$li['pathTo'];
       }
-      elseif (is_dir(getLang().'/'.$li['pathTo'])) {
-        $dirfound = getLang().$li['pathTo'];
+      elseif (is_dir(self::getLang().'/'.$li['pathTo'])) {
+        $dirfound = self::getLang().$li['pathTo'];
       }
       //
       $li['hasChildren'] = false;
@@ -1504,6 +1504,19 @@ class DynamicMenu {
 
 
 
+  /**
+   * self::getLang
+   * Ermittelt die gesetzte Sprache
+   */
+  public static function getLang() {
+      return (isset($_GET['lang']) && $_GET['lang'] == 'en' ? 'en' : 'de');
+  }
+
+
+
+
+
 };
 
 ?>
+
