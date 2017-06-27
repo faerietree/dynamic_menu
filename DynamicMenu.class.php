@@ -287,6 +287,7 @@ class DynamicMenu {
         && array_search($this->getEnd($val,$this->endMode),$this->notEnd) != false)
           continue;
       #current - marker
+	echo 'val: ' . $val;
       if ( (isset($_GET['id']) && $_GET['id'] == $val)
            || (!isset($_GET['id']) && ($val == $startEN || $val == $startDE)) ) {
           $cToSet = ' current';
@@ -544,35 +545,40 @@ class DynamicMenu {
             $d = dirname(__FILE__);
             if (file_exists($d.'/'.$pathTo.'/index.php')) {
                 $li['file'] = 'index.php';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }
             else if (file_exists($d.'/'.$pathTo.'/index.htm')) {
                 $li['file'] = 'index.htm';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }
             else if (file_exists($d.'/'.$pathTo.'/index.html')) {
                 $li['file'] = 'index.html';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }//home?
             else if (file_exists($d.'/'.$pathTo.'/home.php')) {
                 $li['file'] = 'home.php';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }
             else if (file_exists($d.'/'.$pathTo.'/home.htm')) {
                 $li['file'] = 'home.htm';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }
             else if (file_exists($d.'/'.$pathTo.'/home.html')) {
                 $li['file'] = 'home.html';
-                $pathTo .= '/'.$li['file'];
-                $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+	            $pathTo .= '/'.$li['file'];
             }
+	    else {
+                //TODO If no file in directory? Shall we abort and not display this directory in the menu?
+                //echo 'Excluding directory as no index|home.php|html|htm file was find within it:' . $pathTo;
+		//return null;
+                //TODO better choose next best found file? Only then return null?
+                //$li['file'] = null; //<-- if '' then we get in a endless loop it seems.
+  		//return array("NEITHER INDEX.PHP|HTML|HTM NOR HOME.PHP|HTML|HTM FILE FOUND IN DIRECTORY: ".$d.'/'.$pathTo);
+	    }
             //
+//	    if (isset($li['file']) && !empty($li['file'])) {
+                    $pathTo = preg_replace('/\/{2}/', '/', $pathTo);
+//	    }
             $pathTo = str_replace('//', '/', $pathTo);
 
             $dirsAndFile = explode('/', $pathTo);
@@ -643,7 +649,10 @@ class DynamicMenu {
         }
         
         //update: recognize file as current even though html entities in filename
-        $GETIdPlusHtml = self::getParamPlusHtml($_GET['id']);
+        $GETIdPlusHtml = self::getParamPlusHtml((
+
+		isset($_GET['id']) ? $_GET['id'] : ""
+	));
         #echo ''.strtolower($GETIdPlusHtml).' == '.strtolower($li['title']).' == '
         #       .strtolower($li['file']).'<br />';
         if (isset($_GET['id'])
@@ -1013,7 +1022,9 @@ class DynamicMenu {
    * buildMenu              *
    * dynamic menu evolved   *
    *------------------------*/
-  public function buildMenu($lis = null, $oVal='', $submenu = false) {
+  public function buildMenu($lis = null, $oVal='', $submenu = false,  $dirfound_one_level_higher = null) {
+
+  
     //Baut Menuesystem anhand Settings
     //EVOLVED GET-VERSION [with ORDER options]
 
@@ -1040,9 +1051,17 @@ class DynamicMenu {
     #echo '<br /><br /><br /><br />';
 
     // die aussortierten finalen lis durchgehen - ggfs rekursiv
+    $tiefer = false; //<-- if one of the lis goes in recursion, we increase the global depth counter. (only once per layer)
     foreach ($finalLis as $key => $li) {
-      //
-      $tiefer = false;
+        //echo $key .' -> '. $li.' pathTo='.$li['pathTo'] .'<br/>';
+	if ($li == null || !isset($li) || empty($li) || $li['file'] == null /*hence pathTo points to the motherDir => endless recursion*/
+			|| !isset($li['pathTo']) || empty($li['pathTo'])) {
+
+		continue;
+	}
+      //print_r($li);
+      //because only once per level.
+//      $tiefer = false;
       $dirfound = false;
       if (is_dir($this->base.'/'.$li['pathTo'])) {
         $dirfound = $this->base.'/'.$li['pathTo'];
@@ -1057,15 +1076,23 @@ class DynamicMenu {
         $dirfound = self::getLang().$li['pathTo'];
       }
       //
+
+      if ($dirfound_one_level_higher != null && $dirfound == $dirfound_one_level_higher) {
+		// => avoid endless loop (it's a double)
+                return null;
+      }
+
+
       $li['hasChildren'] = false;
-      if ($this->recursive && $dirfound != false
+      if ($this->recursive && $dirfound !== false 
           && $this->tiefe < $this->maxTiefe) {
-        //
+        //if this li has reached deeper level. (currently only globally used.)
         $tiefer = true;
         //read3() returns $lis!
-        #echo 'reached';
+        //echo 'reached recursion: dirfound '.$dirfound;
 
-        $finalLis[$key]['hasChildren'] = $this->buildMenu($this->read3($dirfound, $tiefer), '', true);
+
+        $finalLis[$key]['hasChildren'] = $this->buildMenu($this->read3($dirfound, $tiefer), '', true, $dirfound);
         #echo 'hasChildren:';
         #print_r($li['hasChildren']);
       }
@@ -1141,7 +1168,7 @@ class DynamicMenu {
             break;
         }
         $parts = explode('/',$ent);
-        $file = $parts[count($parts)];
+        $file = $parts[count($parts) - 1];
         $filename = str_replace('.'.$this->getEnd($file), '', $file);
         $title = $filename;
         //
@@ -1193,19 +1220,25 @@ class DynamicMenu {
         $cToS = ' none';
       }# else echo 'Bed.: false ('.$_GET['type'].')<br /><br />';
       if ($cToS != ' block') {
-        $cToSet = '';
+        $cToS = '';
       }
-      $out .= $motherLi ? $this->getLi('', $cToSet) : '';
+      $out .= $motherLi ? $this->getLi('', $cToS, $motherLi) : '';
       $out .= $this->getUl('tiefe'.$level, 'nav_ul'.$cToS, 'notype');
       $tiefer = false;
+
       foreach ($lisSub as $li) {
+          // If for a directory no file to be included was found (currently only index|home.php|html|htm are examined), then we not show this directory in the menu. => Directories only in menu if index.php ! Comes in handy as no prepending with . or # is necessary to exclude it. So by default a directory is not shown.
+          if ($li == null || !isset($li) || empty($li)) {
+		continue;
+          }
           //
           #$out .= $bed ? $this->getLi().$li['innerHTML'] : $li['outerHTML'];
           $out .= $li['outerHTML'];
           #echo 'reached -- innerHTML: '.$li['innerHTML'].'<br />';
           #echo 'reached -- hasChildren: '.$li['hasChildren'].'<br />';
 
-          if (isset($li['hasChildren']) && $li['hasChildren']) {
+         
+         if (isset($li['hasChildren']) && $li['hasChildren']) {
               #print_r($li['innerHTML']);
               //nur einmal erhoehen pro renderLevel
               if (!$tiefer) {
@@ -1219,6 +1252,7 @@ class DynamicMenu {
           //
           #$out .= $bed ? $this->getLi_() : '';
       }
+          
       $out .= $this->getUl_();
       $out .= $motherLi ? $this->getLi_() : '';
 
@@ -1287,7 +1321,7 @@ class DynamicMenu {
    * returns the begin tag of an ul tag
    */
   function getUl($id = '', $class = '', $type = '') {
-      return '<ul id="'.$id.'" class="'.$class.'" type="'.$type.'">';
+      return '<ul id="'.$id.'" class="'.$class.' ' .$id. '" type="'.$type.'">';
   }
   /**
    * getUl_
@@ -1298,9 +1332,9 @@ class DynamicMenu {
   }
   /**
    * getLi
-   * returns the begin tag of an ul tag
+   * returns the begin tag of an li tag
    */
-  function getLi($id = '', $class = 'nav_li') {
+  function getLi($id = '', $class = 'nav_li', $li) {
         #if there was no page id set, there would be a problem without
         global $startEN;     # these
         global $startDE;     # globals
@@ -1320,7 +1354,7 @@ class DynamicMenu {
   }
   /**
    * getLi_
-   * returns the end tag of an ul tag
+   * returns the end tag of an li tag
    */
   function getLi_() {
       return '</li>'."\n";
