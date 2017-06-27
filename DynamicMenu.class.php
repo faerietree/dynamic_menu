@@ -1071,7 +1071,7 @@ class DynamicMenu
 			// home li suchen
 			// move everything at the succeding position until home li gefunden
 			$schatz = $lis[0];  // store init li
-			for ($i = 1; $i <= $lisL; $i++)
+			for ($i = 1; $i < $lisL; $i++)
 			{
 				$ili = $lis[$i];
 				// home li gefunden?
