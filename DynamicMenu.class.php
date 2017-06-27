@@ -1381,7 +1381,7 @@ class DynamicMenu
 	* if the level changes i.e. from 0 to 1, then it goes deeper
 	*	and concats the resulting output-string to the parent li
 	* @param $lisSub -- zu Beginn erste Ebene, dann Subarray eines $this->lis-Entry
-	* @param $level	-- Abbruchbed.
+	* @param $level -- termination condition
 	*/
 	function renderLevel($lisSub, $level = 0, $motherLi = false)
 	{
@@ -1401,10 +1401,11 @@ class DynamicMenu
 		if ($cond)
 		{
 			//echo 'condition: true<br /><br />';
-			$cToS = ' ';//display:none by default via CSS
+			$cToS = '';//display:none by default via CSS
 		}
 		//else echo 'cond.: false ('.$_GET['type'].')<br /><br />';
-		$out .= $motherLi ? $this->getLi('', $cToS, $motherLi) : '';
+		$isChild = $motherLi !== false;
+		$out .= $motherLi ? $this->getLi('', $cToS, $motherLi, $isChild).$motherLi['innerHTML'] : '';
 		$out .= $this->getUl('tiefe'.$level, 'nav_ul'.$cToS, 'notype');
 		$tiefer = false;
 
@@ -1415,14 +1416,13 @@ class DynamicMenu
 			{
 				continue;
 			}
-			#$out .= $cond ? $this->getLi().$li['innerHTML'] : $li['outerHTML'];
-			$out .= $li['outerHTML'];
-			#echo 'reached -- innerHTML: '.$li['innerHTML'].'<br />';
-			#echo 'reached -- hasChildren: '.$li['hasChildren'].'<br />';
+			//$out .= $cond ? $this->getLi().$li['innerHTML'] : $li['outerHTML'];
+			//echo 'reached -- innerHTML: '.$li['innerHTML'].'<br />';
+			//echo 'reached -- hasChildren: '.$li['hasChildren'].'<br />';
 
 			if (isset($li['hasChildren']) && $li['hasChildren'])
 			{
-				#print_r($li['innerHTML']);
+				//print_r($li['innerHTML']);
 				// increase only once per renderLevel
 				if (!$tiefer)
 				{
@@ -1432,8 +1432,10 @@ class DynamicMenu
 				//print_r($li['hasChildren']);
 				$out .= $this->renderLevel($li['hasChildren'], $level, $li);
 			}
+			else
+				$out .= $li['outerHTML'];
 
-			//$out .= $bed ? $this->getLi_() : '';
+			//$out .= $cond ? $this->getLi_() : '';
 		}
 
 		$out .= $this->getUl_();
@@ -1474,19 +1476,18 @@ class DynamicMenu
 			''.$string.'';
 		$string = trim($string);
 		$string .= ' ';
-		$vP = explode('.', substr($string, 1, strlen($string) - 1));// vor punkt
-		$oL = explode('_', $vP[0]);								 // only last
-		/*former version
-		return strtoupper($string[0]).$oL[0]
-		.(sizeOf($oL) > 1 ? ' '.strtoupper($oL[1][0]).substr($oL[1].' ',1,$oL.length-1) : '')
-		.(sizeOf($oL) > 2 ? ' '.strtoupper($oL[2][0]).substr($oL[2].' ',1,$oL.length-1) : '');
-		*/
+		$beforePoint = explode('.', substr($string, 1, strlen($string) - 1));
+		// TODO Handle __
+		$remain = explode('_', $beforePoint[0]);
 
 		// more universal approach
-		$fairy = strtoupper($string[0]).$oL[0];
-		for ($i = 1; $i < sizeOf($oL); $i++)
+		$fairy = strtoupper($string[0]).$remain[0];
+		for ($i = 1; $i < sizeOf($remain); $i++)
 		{
-			$fairy .= ' '.strtoupper($oL[$i][0]).substr($oL[$i].' ', 1, strlen($oL[$i]) - 1);
+			$word = $remain[$i];
+			if (empty($word))
+				continue;
+			$fairy .= ' '.strtoupper($word[0]).substr($word.' ', 1, strlen($word) - 1);
 		}
 		return $fairy;
 	}
@@ -1534,7 +1535,7 @@ class DynamicMenu
 	* getLi
 	* returns the begin tag of an li tag
 	*/
-	function getLi($id = '', $class = 'nav_li', $li)
+	function getLi($id = '', $class = 'nav_li', $li, $isChild = false)
 	{
 		// to avoid problems if there was no page id set
 		global $startEN;
@@ -1548,7 +1549,8 @@ class DynamicMenu
 				||
 				strtolower($_GET['id']) == strtolower($li['file'])
 			)
-			|| !isset($_GET['id']) && in_array($li['file'], $startPages))
+			|| !isset($_GET['id']) && in_array($li['file'], $startPages) && !$isChild
+		)
 		{
 			$class .= ' current';
 		}
@@ -1561,7 +1563,7 @@ class DynamicMenu
 	*/
 	function getLi_()
 	{
-		return '</li>'."\n";
+		return '</li>';
 	}
 
 
