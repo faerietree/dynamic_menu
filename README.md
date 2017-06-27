@@ -9,8 +9,8 @@ A menu controlled via file system following UNIX principle 'everything is a file
 
 ## Documentation
 
-* Link `DynamicMenu.class.php` into the website folder.
-  `ln -si ../dynamic_menu/DynamicMenu.class.php .`
+* Do not link but copy `DynamicMenu.class.php` into the website folder.
+  `cp ../dynamic_menu/DynamicMenu.class.php .`
 * Copy the `dynamicmenu.cfg.php` template
   `cp ../dynamic_menu/dynamicmenu.cfg.php .`
 * Customize the configuration e.g. provide more exceptions.
