@@ -15,11 +15,13 @@ A menu controlled via file system following UNIX principle 'everything is a file
   `cp ../dynamic_menu/dynamicmenu.cfg.php .`
 * Customize the configuration e.g. provide more exceptions.
 * Include within the site's PHP, e.g.
-      <nav id="main-nav" class="navbar-collapse ">
-      <?php
-      include("dynamicmenu.config.php");
-      include("DynamicMenu.class.php");
-      ?>
-      </nav>
+  ```html
+  <nav id="main-nav" class="navbar-collapse ">
+  <?php
+  include("dynamicmenu.config.php");
+  include("DynamicMenu.class.php");
+  ?>
+  </nav>
+  ```
 * Now if a file is created, e.g. a folder that contains an index.{php,htm}, the file name shows in the menu and links to it if it is not in the exceptions and the file is not hidden by prepending a "." or a "#" to the file name.
 
