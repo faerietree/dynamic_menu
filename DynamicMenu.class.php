@@ -1477,7 +1477,7 @@ class DynamicMenu
 		.'<style type="text/css">/*<[CDATA[*/'."\n"
 			.'/*better twice than not at all*/'."\n"
 			.'.none { display: none !important; }'."\n"
-			.'.inline { display: block; }'."\n"
+			.'.inline,.static { display: block; }'."\n"
 			;
 		$circularCss = '';
 		if ($this->circular)
