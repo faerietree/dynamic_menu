@@ -103,14 +103,8 @@ $e = array(
 ,'ai-vat'
 ,'aimeos-core'
 ,'aimeos-typo3'
-,'aimeos__16_3_1'
-,'aimeos__16_4_3'
-,'aimeos__17_4_'
 ,'aimeos__17_4_1'
-,'aimeos_hamag'
-,'aimeos_hamag.bak'
 ,'aimeos_quadzz'
-,'aimeos_setup_backup_language_default_set.bak'
 ,'angelika_hirschberg'
 ,'angelika_hirschberg_site'
 ,'angelika_hirschberg_t3template'
@@ -153,7 +147,6 @@ $e = array(
 ,'opensourceecology'
 ,'owl_man.jpg'
 ,'present'
-,'quadz__aimeos_16_4_3__2016_08_04.sql'
 ,'quadzz'
 ,'riddly'
 ,'robots.txt'
@@ -178,7 +171,7 @@ $ownquickhtml = '<ul class="a_class">'  // Simply copy next line:
 		.'</ul>';
 
 
-#DYNAMIC MENU
+# DYNAMIC MENU SETTINGS
 $recursive  = true;
 $shortIDs   = true;
 $end = false;
@@ -186,9 +179,11 @@ $notEnd = array('js', 'css');
 $endMode = 'l';
 $path = './';
 $type = 'allget'; # {all|files|dir}get <=> what to phpInclude
+$circular = false;
+$origin = ['50%', '50%'];
+$radius = 33;
+$unit = '%';
 
-
-# DYNAMIC MENU SETTINGS
 $evolved = true;
 $orderBy = 'order';
 $orderMode = 'asc';
