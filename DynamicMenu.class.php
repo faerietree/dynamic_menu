@@ -78,6 +78,11 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$statics_ = isset($_GET['statics']) ? $_GET['statics'] : array();
 	$staticEntries_ = isset($_GET['staticEntries']) ? $_GET['staticEntries'] : $statics_;
 
+	$circular_ = isset($_GET['circular']) ? $_GET['circular'] : false;
+	$origin_ = isset($_GET['origin']) ? $_GET['origin'] : ['50%', '50%'];
+	$radius_ = isset($_GET['radius']) ? $_GET['radius'] : 50;
+	$unit_ = isset($_GET['unit']) ? $_GET['unit'] : '%';
+
 
 
 	/*
@@ -131,12 +136,18 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$statics = isset($statics) ? $statics : $staticEntries_;
 	$staticEntries = isset($staticEntries) ? $staticEntries : $statics;
 
+	$circular = isset($circular) ? $circular : $circular_;
+	$origin = isset($origin) ? $origin : $origin_;
+	$radius = isset($radius) ? $radius : $radius_;
+	$unit = isset($unit) ? $unit : $unit_;
 
 	//echo getcwd();
 	$fs = new DynamicMenu($path, $type, $e, $rec, $maxTiefe, $end, $notEnd, $endMode,
 						$base,
 						$evolved, $orderedMenu, $orderBy, $homeAlwaysAtTop,
-						$menuMap, $staticEntries, $orderMode, $shortIDs);
+						$menuMap, $staticEntries, $orderMode, $shortIDs,
+						$circular, $origin, $radius, $unit
+					);
 	if (!isset($_GET['build']) || ($_GET['build'] != 'off' && $_GET['build'] != false))
 	{
 		if ($evolved)
@@ -202,6 +213,10 @@ class DynamicMenu
 	private $homeAlwaysAtTop = true;
 	private $orderMode = 'asc';  // either from great to small or the other way round
 	private $shortIDs = true;  // whether to set IDs without ending
+	private $circular = false;
+	private $origin = ['50%', '50%'];  // decoupled from unit to allow center positioning
+	private $radius = 50;
+	private $unit = '%';
 
 	private $staticEntries = array();  // static absolute or relative menu links
 
@@ -224,10 +239,16 @@ class DynamicMenu
 	public function __construct($hD, $type, $excs, $rec=false, $maxTiefe=2,
 			$end=false, $nEnd=false, $eM=false, $b=false,
 			$evolved=true, $orderedMenu=true, $orderBy='filesize', $homeAlwaysAtTop=true,
-			$menuMap=false, $staticEntries=false, $orderMode='asc', $shortIDs = true)
+			$menuMap=false, $staticEntries=false, $orderMode='asc', $shortIDs = true,
+			$circular=false, $origin=['50%','50%'], $radius=50, $unit='%'
+		)
 	{
 		$this->path = $this->homeDir = $hD;			 // home_dir required
 		$this->base = ($b != false ? $_SERVER['DOCUMENT_ROOT'] : '');
+		$this->circular = $circular;
+		$this->origin = $origin;
+		$this->radius = $radius;
+		$this->unit = $unit;
 
 		//echo 'Type: '.$type;
 		if (substr($this->homeDir,0,3) == '../' && sizeOf(explode('/',$this->homeDir)) == 0)
@@ -1452,12 +1473,33 @@ class DynamicMenu
 	*/
 	function renderMenu()
 	{
-		echo $this->renderLevel($this->lis)
+		$out = $this->renderLevel($this->lis)
 		.'<style type="text/css">/*<[CDATA[*/'."\n"
 			.'/*better twice than not at all*/'."\n"
 			.'.none { display: none !important; }'."\n"
 			.'.inline { display: block; }'."\n"
-		.'/*]]>*/</style>';
+			;
+		$circularCss = '';
+		if ($this->circular)
+		{
+			// arrange elements circularly
+			$lisL = count($this->lis);
+			$angle_step = 2 * M_PI / $lisL;
+			for ($i = 0; $i < $lisL; ++$i)
+			{
+				$angle = $i * $angle_step;
+				$circularCss .= '.nav_ul > li:nth-child('. ($i + 1) .')'
+					. '{' . "\n"
+					. 'margin-left: '. ($this->radius * cos($angle)) . $this->unit . ';'
+					. 'margin-top: '. ($this->radius * sin($angle)) . $this->unit . ';'
+					. 'left: ' . $this->origin[0] . ';'
+					. 'top: ' . $this->origin[1] . ';'
+					. '}' . "\n"
+				;
+			}
+		}
+		$out_ = '/*]]>*/</style>';
+		echo $out . $circularCss . $out_;
 	}
 
 
