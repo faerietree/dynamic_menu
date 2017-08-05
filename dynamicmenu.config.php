@@ -48,8 +48,6 @@ $path = './';
 $type = 'allget'; # {all|files|dir}get <=> what to phpInclude
 $circular = false;
 $origin = ['50%', '50%'];
-$radius = 33;
-$unit = '%';
 
 $evolved = true;
 $orderBy = 'order';
