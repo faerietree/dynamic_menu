@@ -153,11 +153,6 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 		if ($evolved)
 		{
 			$fs->lis = $fs->buildMenu();
-			if (false)
-			if ($orderedMenu || ($orderedMenu != 'off' && $orderedMenu != false))
-			{
-				$fs->orderMenu($fs->lis);
-			}
 			if ($renderMenu || ($renderMenu != 'off' && $renderMenu != false))
 			{
 				$fs->renderMenu();
