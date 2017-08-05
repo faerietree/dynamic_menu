@@ -375,10 +375,14 @@ class DynamicMenu
 
 			// current - marker
 			echo 'val: ' . $val;
-			if ( (isset($_GET['id']) && $_GET['id'] == $val)
-			|| (!isset($_GET['id']) && ($val == $startEN || $val == $startDE)) )
+
+			global $filename;
+			$id = $filename;  // id may have been derived in body.tpl.php already
+			if (empty($id))
+				$id = $_GET['id'];
+			$cToSet = '';
+			if (!empty($id) && $id == $val || empty($id) && ($val == $startEN || $val == $startDE) )
 				$cToSet = ' current';
-			else $cToSet = '';
 
 			$this->toGiveBack .= ''
 				.'<li class="nav_li'.$cToSet.'">'
@@ -432,10 +436,14 @@ class DynamicMenu
 				$val = $oVal.'.'.$val;
 
 			// current - marker
-			if ( (isset($_GET['id']) && $_GET['id'] == $val)
-				|| (!isset($_GET['id']) && ($val == $startEN || $val == $startDE)) )
+			global $filename;
+			$id = $filename;  // id may have been derived in body.tpl.php already
+			if (empty($id))
+				$id = $_GET['id'];
+
+			$cToSet = '';
+			if (!empty($id) && $id == $val || empty($id) && ($val == $startEN || $val == $startDE) )
 				$cToSet = ' current';
-			else $cToSet = '';
 
 			$this->toGiveBack .= '' //former $this->path -->$_SERVER['PHP_SELF']
 				.'<li class="nav_li '.$cToSet.'">'
@@ -792,21 +800,25 @@ class DynamicMenu
 		}
 
 		// Update: recognize file as current even though html entities in filename
-		$GETIdPlusHtml = self::getParamPlusHtml((
-			isset($_GET['id']) ? $_GET['id'] : ""
-		));
-		//echo ''.strtolower($GETIdPlusHtml).' == '.strtolower($li['title']).' == '
-		//	.strtolower($li['file']).'<br />';
-		if (isset($_GET['id'])
-			&& !$staticCond
+		global $filename;
+		$id = $filename;  // id may have been derived in body.tpl.php already
+		if (empty($id))
+		{
+			$id = self::getParamPlusHtml((
+				isset($_GET['id']) ? $_GET['id'] : ""
+			));
+		}
+
+		//echo ''.strtolower($id).' == '.strtolower($li['title']).' == '.strtolower($li['file']).'<br />';
+		if (!empty($id) && !$staticCond
 			&& (
-				(strtolower($GETIdPlusHtml) == strtolower($li['title']))
-				|| strtolower($GETIdPlusHtml) == strtolower($li['file'])
+				(strtolower($id) == strtolower($li['title']))
+				|| strtolower($id) == strtolower($li['file'])
 			)
-			|| !isset($_GET['id']) && in_array($li['file'], $startPages) && !$staticCond
-			|| isset($_GET[$li['title']]) && !$staticCond
-			|| (isset($_GET['type']) && !$staticCond
-				&& ($_GET['type'] == $li['file'] || $_GET['type'] == $li['title']))
+			|| empty($id) && in_array($li['file'], $startPages) && !$staticCond
+			|| !empty($_GET[$li['title']]) && !$staticCond
+			|| !empty($_GET['type']) && !$staticCond
+				&& ($_GET['type'] == $li['file'] || $_GET['type'] == $li['title'])
 			)
 		{
 			$class .= ' current';
@@ -1422,7 +1434,7 @@ class DynamicMenu
 		if ($cond)
 		{
 			//echo 'condition: true<br /><br />';
-			$cToS = '';//display:none by default via CSS
+			$cToS = 'nav_li';//display:none by default via CSS
 		}
 		//else echo 'cond.: false ('.$_GET['type'].')<br /><br />';
 		$isChild = $motherLi !== false;
