@@ -38,8 +38,8 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$rec_ = isset($_GET['rec']) ? $_GET['rec'] : false;
 	$rec_ = isset($_GET['r']) ? $_GET['r'] : $rec_;
 	$rec_ = isset($_GET['recursive']) ? $_GET['recursive'] : $rec_;
-	$maxTiefe_ = isset($_GET['maxTiefe']) ? $_GET['maxTiefe'] : 2;
-	$maxTiefe_ = isset($_GET['depth']) ? $_GET['depth'] : $maxTiefe_;
+	$maxDepth_ = isset($_GET['maxDepth']) ? $_GET['maxDepth'] : 2;
+	$maxDepth_ = isset($_GET['depth']) ? $_GET['depth'] : $maxDepth_;
 
 	// desired endings
 	$end_ = (isset($_GET['end'])) ? $_GET['end'] : false;
@@ -108,7 +108,7 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	// set recursive or rec
 	$rec = isset($recursive) ? $recursive : $rec;
 	// recursion depth limit
-	$maxTiefe = isset($maxTiefe) ? intval($maxTiefe) : $maxTiefe_;
+	$maxDepth = isset($maxDepth) ? intval($maxDepth) : $maxDepth_;
 
 	// Only these Endings
 	$end = isset($end) ? $end : $end_;
@@ -142,7 +142,7 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$unit = isset($unit) ? $unit : $unit_;
 
 	//echo getcwd();
-	$fs = new DynamicMenu($path, $type, $e, $rec, $maxTiefe, $end, $notEnd, $endMode,
+	$fs = new DynamicMenu($path, $type, $e, $rec, $maxDepth, $end, $notEnd, $endMode,
 						$base,
 						$evolved, $orderedMenu, $orderBy, $homeAlwaysAtTop,
 						$menuMap, $staticEntries, $orderMode, $shortIDs,
@@ -194,8 +194,8 @@ class DynamicMenu
 	private $d;  // for a Directory object instance
 	private $results = array();  // as storage for results - filled $results[0.Ebene]=..
 	private $res = array();  // as storage for results - filled $res[]=completePath
-	private $tiefe = 0;  // makes styling the subnavs easier #nav2 li {}
-	private $maxTiefe = 2;  // otherwise the performance suffers
+	private $depth = 0;  // makes styling the subnavs easier #nav2 li {}
+	private $maxDepth = 2;  // otherwise the performance suffers
 	private $end = array();  // valid Endings
 	private $notEnd = array();  // not valid Endings
 	private $endMode = 'l';  // Ending Mode is last Ending
@@ -231,7 +231,7 @@ class DynamicMenu
 
 
 	// ======= CONSTRUCTORS
-	public function __construct($hD, $type, $excs, $rec=false, $maxTiefe=2,
+	public function __construct($hD, $type, $excs, $rec=false, $maxDepth=2,
 			$end=false, $nEnd=false, $eM=false, $b=false,
 			$evolved=true, $orderedMenu=true, $orderBy='filesize', $homeAlwaysAtTop=true,
 			$menuMap=false, $staticEntries=false, $orderMode='asc', $shortIDs = true,
@@ -279,7 +279,7 @@ class DynamicMenu
 		}
 
 		$this->recursive = ($rec) ? true : false;
-		$this->maxTiefe = intval($maxTiefe);
+		$this->maxDepth = intval($maxDepth);
 
 		if (is_array($excs))
 			foreach ($excs as $e)
@@ -341,7 +341,7 @@ class DynamicMenu
 			$oVal = $this->homeDir;
 		if ($results == null)
 			$results = $this->read($this->homeDir);
-		$this->toGiveBack .= '<ul id="tiefe'.$this->tiefe.'">'."\n";
+		$this->toGiveBack .= '<ul id="depth'.$this->depth.'">'."\n";
 		foreach ($results as $key => $val)
 		{
 			if ($this->end != false
@@ -367,10 +367,10 @@ class DynamicMenu
 				.'<li class="nav_li'.$cToSet.'">'
 				.'<a href="../'.$oVal.'/'.$val.'" class="'.$cToSet.'">'
 				.self::toFairy($val).'</a></li>';
-			if ($this->recursive && is_dir($oVal.$val) && $this->tiefe < $this->maxTiefe)
+			if ($this->recursive && is_dir($oVal.$val) && $this->depth < $this->maxDepth)
 			{
 				$nOVal = ($oVal[$oVal.length-1]=='/' || $val[0]=='/') ? $oVal.$val : $oVal.'/'.$val;
-				$this->tiefe++;
+				$this->depth++;
 				$this->build($this->read($this->homeDir.'/'.$val),$nOVal);//read() returns results!
 
 			}
@@ -411,7 +411,7 @@ class DynamicMenu
 			&& array_search($this->getEnd($val,$this->endMode),$this->notEnd) != false)
 				continue;
 
-			if (is_dir($this->base.$val) && $this->tiefe > 0)
+			if (is_dir($this->base.$val) && $this->depth > 0)
 				$val = $oVal.'.'.$val;
 
 			// current - marker
@@ -428,9 +428,9 @@ class DynamicMenu
 				.'<li class="nav_li '.$cToSet.'">'
 				.'<a href="'.$_SERVER['PHP_SELF'].self::addToQS('id',$val).'"'
 				.' class="'.$cToSet.'">'.self::toFairy($val).'</a></li>';
-			if ($this->recursive && is_dir($this->base.$val) && $this->tiefe < $this->maxTiefe)
+			if ($this->recursive && is_dir($this->base.$val) && $this->depth < $this->maxDepth)
 			{
-				$this->tiefe++;
+				$this->depth++;
 				$this->buildNav($this->read2($this->base.$val), $val);//read2() returns results!
 			}
 		}
@@ -620,7 +620,7 @@ class DynamicMenu
 	########### EVOLVED METHODS #################################################
 	/**
 	* generateLi
-	* also need an attribute called tiefe to save the depth of nested menus
+	* also need an attribute called depth to save the depth of nested menus
 	* @param $title meist Datei-Name toFairy() oder mapped English Title
 	* @param $pathTo Dateiname ...
 	* @param $class li-Klasse(n) [optional]
@@ -880,7 +880,7 @@ class DynamicMenu
 			$li['innerHTML'] = $innerHTML;
 		}
 		$li['outerHTML'] = '<li class="'.$class.'">'.$li['innerHTML'].'</li>';
-		$li['depth'] = $this->tiefe;
+		$li['depth'] = $this->depth;
 
 		// gets saved to attribute in function read3
 		return $li;
@@ -1210,7 +1210,6 @@ class DynamicMenu
 			$lis = $this->read3($this->base.(preg_replace('/[.]{1,2}\//i','',$this->homeDir)), $submenu);
 		}
 		$finalLis = array();
-		// durch read3 ermittelte $lis durchgehen und aussortieren
 		foreach ($lis as $li)
 		{
 			$liEnd = $this->getEnd($li['pathTo']);
@@ -1231,7 +1230,7 @@ class DynamicMenu
 		//echo '<br /><br /><br /><br />';
 
 		// iterate the sorted out final lis - recursively
-		$tiefer = false; //<-- if one of the lis goes in recursion, we increase the global depth counter. (only once per layer)
+		$deeper = false; //<-- if one of the lis goes in recursion, we increase the global depth counter. (only once per layer)
 		foreach ($finalLis as $key => $li)
 		{
 			//echo $key .' -> '. $li.' pathTo='.$li['pathTo'] .'<br/>';
@@ -1242,7 +1241,7 @@ class DynamicMenu
 			}
 			//print_r($li);
 			// because only once per level.
-			//$tiefer = false;
+			//$deeper = false;
 			$dirfound = false;
 			if (is_dir($this->base.'/'.$li['pathTo']))
 			{
@@ -1269,21 +1268,21 @@ class DynamicMenu
 
 			$li['hasChildren'] = false;
 			if ($this->recursive && $dirfound !== false
-				&& $this->tiefe < $this->maxTiefe)
+				&& $this->depth < $this->maxDepth)
 			{
-				//if this li has reached deeper level. (currently only globally used.)
-				$tiefer = true;
-				//read3() returns $lis!
+				// if this li has reached deeper level. (currently only used globally)
+				$deeper = true;
+				// read3() returns $lis!
 				//echo 'reached recursion: dirfound '.$dirfound;
 
-				$finalLis[$key]['hasChildren'] = $this->buildMenu($this->read3($dirfound, $tiefer), '', true, $dirfound);
+				$finalLis[$key]['hasChildren'] = $this->buildMenu($this->read3($dirfound, $deeper), '', true, $dirfound);
 				#echo 'hasChildren:';
 				#print_r($li['hasChildren']);
 			}
 		}
-		if ($tiefer)
+		if ($deeper)
 		{
-			$this->tiefe++;
+			$this->depth++;
 		}
 		//echo 'finalLis: ';
 		//print_r($finalLis);
@@ -1334,7 +1333,7 @@ class DynamicMenu
 				$filename = str_replace('.'.$this->getEnd($entry), '', $entry);
 				#echo $filename;
 				$classToSet = 'inline';
-				if ($this->tiefe > 0)
+				if ($this->depth > 0)
 				{
 					$classToSet = 'none';
 				}
@@ -1380,7 +1379,7 @@ class DynamicMenu
 		{
 			$lis = $this->orderMenu($lis);
 		}
-		//$this->tiefe++;
+		//$this->depth++;
 		//print_r($lis);
 		return $lis;
 	}
@@ -1418,8 +1417,8 @@ class DynamicMenu
 		//else echo 'cond.: false ('.$_GET['type'].')<br /><br />';
 		$isChild = $motherLi !== false;
 		$out .= $motherLi ? $this->getLi('', $cToS, $motherLi, $isChild).$motherLi['innerHTML'] : '';
-		$out .= $this->getUl('tiefe'.$level, 'nav_ul'.$cToS, 'notype');
-		$tiefer = false;
+		$out .= $this->getUl('depth'.$level, 'nav_ul'.$cToS, 'notype');
+		$deeper = false;
 
 		foreach ($lisSub as $li)
 		{
@@ -1436,11 +1435,11 @@ class DynamicMenu
 			{
 				//print_r($li['innerHTML']);
 				// increase only once per renderLevel
-				if (!$tiefer)
+				if (!$deeper)
 				{
 					$level++;
 				}
-				$tiefer = true;
+				$deeper = true;
 				//print_r($li['hasChildren']);
 				$out .= $this->renderLevel($li['hasChildren'], $level, $li);
 			}
