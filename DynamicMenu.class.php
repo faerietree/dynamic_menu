@@ -204,7 +204,7 @@ class DynamicMenu
 	private $end = false;  // valid Endings
 	private $notEnd = false;  // not valid Endings
 	private $endMode = 'l';  // Ending Mode is last Ending
-	private $navMode = false;		// navMode = 'get' for using GET requests
+	private $navMode = false; // navMode = 'get' for using GET requests
 
 	private $evolved = true;  // whether menu gets build the evolved way
 	private $orderedMenu = true;  // whether to order the menu or not
@@ -226,7 +226,7 @@ class DynamicMenu
 	public $message = null;
 	public $state = 'not busy';
 	// NAV DIV
-	public $toGiveBack = '<style type="text/css" href="./fileshark.css"></style><div id="nav">';
+	public $toGiveBack = '<style type="text/css" href="./dynamic_menu.css"></style><div id="nav">';
 	public $toGiveBack_ = '</div>';
 	// NAV DIV -END
 
