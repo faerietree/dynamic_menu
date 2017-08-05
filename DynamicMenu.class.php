@@ -201,8 +201,8 @@ class DynamicMenu
 	private $res = array();  // as storage for results - filled $res[]=completePath
 	private $tiefe = 0;  // makes styling the subnavs easier #nav2 li {}
 	private $maxTiefe = 2;  // otherwise the performance suffers
-	private $end = false;  // valid Endings
-	private $notEnd = false;  // not valid Endings
+	private $end = array();  // valid Endings
+	private $notEnd = array();  // not valid Endings
 	private $endMode = 'l';  // Ending Mode is last Ending
 	private $navMode = false; // navMode = 'get' for using GET requests
 
@@ -250,46 +250,25 @@ class DynamicMenu
 		$this->radius = $radius;
 		$this->unit = $unit;
 
-		//echo 'Type: '.$type;
 		if (substr($this->homeDir,0,3) == '../' && sizeOf(explode('/',$this->homeDir)) == 0)
 		{
 			chdir($this->homeDir);
 		}
+		//echo 'Type: '.$type;
 		//echo getcwd();
-		// React on type
 		switch ($type)
 		{
-			default:
-				foreach ($excs as $e)
-				{
-					$this->exceptions[] = $e;
-				}
-				break;
 			case 'dirget':
 				$this->navMode = 'get';
 			case 'dir':
 				$this->dir = true;
 				$this->files = false;
-				foreach ($excs as $e)
-				{
-					$this->exceptions[] = $e;
-				}
-				$this->exceptions = array_unique($this->exceptions);
 				break;
 			case 'filesget':
 				$this->navMode = 'get';
 			case 'files':
 				$this->dir = false;
 				$this->files = true;
-				if (is_array($excs))
-				{
-					foreach ($excs as $e)
-					{
-						$this->exceptions[] = $e;
-					}
-				}
-				else $this->exceptions[] = $e;
-				$this->exceptions = array_unique($this->exceptions);
 				break;
 			case 'allget':
 				$this->navMode = 'get';
@@ -298,26 +277,30 @@ class DynamicMenu
 			case null:
 			case false:
 			case 'everything':
+			default:
 				$this->dir = true;
 				$this->files = true;
-				foreach ($excs as $e)
-				{
-					$this->exceptions[] = $e;
-				}
-				$this->exceptions = array_unique($this->exceptions);
 				break;
 		}
 
 		$this->recursive = ($rec) ? true : false;
 		$this->maxTiefe = intval($maxTiefe);
+
+		if (is_array($excs))
+			foreach ($excs as $e)
+				$this->exceptions[] = $e;
+		else $this->exceptions[] = $e;
+		$this->exceptions = array_unique($this->exceptions);
+
 		$this->endMode = ($eM != false) ? $eM : 'last';
 		if ($end != false)
 		{
 			$this->end = array('');  // ensure type array
 			if (is_array($end))
 				foreach ($end as $v)
-					$this->end[] = $v; // auf Auswahl an End. einschraenken
+					$this->end[] = $v;
 			else $this->end[] = $end;
+			$this->end = array_unique($this->end);
 		}
 		if ($nEnd != false)
 		{
@@ -326,6 +309,7 @@ class DynamicMenu
 				foreach($nEnd as $v)
 					$this->notEnd[] = $v;
 			else $this->notEnd[] = $nEnd;
+			$this->notEnd = array_unique($this->notEnd);
 		}
 
 
