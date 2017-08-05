@@ -814,23 +814,22 @@ class DynamicMenu
 		// replaces all possible chars with their corresponding html equivalents
 		//$pathTo = htmlentities($pathTo);
 		//$li['pathTo'] = htmlentities($li['pathTo']);
-		$li['innerHTML'] = '<a href="'.self::ampersandOfHtmlEntityToHtmlEntityItself($pathTo).'">'
-			.ucfirst(html_entity_decode($title))
-			.'</a>';
+
+		// static menu li to build?
+		if ($staticCond)
+		{
+			$href = $li['pathTo'];
+			$titleToSet = $title;
+		}
+		// no static entries exist => this li needs to be dynamic
+		else
+		{
+			$href = $this->getLiAHref($li);
+			$titleToSet = self::toFairy($li['title']);
+		}
+
 		if ($this->menuMap)
 		{
-			// static menu li to build?
-			if ($staticCond)
-			{
-				$href = $li['pathTo'];
-				$titleToSet = $title;
-			}
-			// no static entries exist => this li needs to be dynamic
-			else
-			{
-				$href = $this->getLiAHref($li);
-				$titleToSet = self::toFairy($li['title']);
-			}
 			// get keys as numeric and(?) string
 			//$titleArK = array_keys($li['title']);
 			//$fileArK = array_keys($li['file']);
@@ -846,34 +845,14 @@ class DynamicMenu
 			}
 			// TODO somehow use the above to translate and retranslate
 			// Goal: Ending no longer needed.
+		}
 
-			$li['innerHTML'] = '<a href="' // nested addToQS call
-				.self::ampersandOfHtmlEntityToHtmlEntityItself($href)
-				.'" class="'.$class.'">'
-				.ucfirst(html_entity_decode($titleToSet))
-				.'</a>';
-		}
-		else
-		{
-			// static menu li to build?
-			if ($staticCond)
-			{
-				$href = $li['pathTo'];
-				$titleToSet = $title;
-			}
-			// no static entries exist => this li needs to be dynamic
-			else
-			{
-				$href = $this->getLiAHref($li);
-				$titleToSet = self::toFairy($li['title']);
-			}
-			//$href = self::addToQS('type',$li['dir'],self::addToQS('id',$li['file'],$qs));
-			$li['innerHTML'] = '<a href="'  // nested addToQS call
-				.self::ampersandOfHtmlEntityToHtmlEntityItself($href)
-				.'" class="'.$class.'">'
-				.html_entity_decode(ucfirst($titleToSet))
-				.'</a>';
-		}
+		//$href = self::addToQS('type',$li['dir'],self::addToQS('id',$li['file'],$qs));
+		$li['innerHTML'] = '<a href="'  // nested addToQS call
+			.self::ampersandOfHtmlEntityToHtmlEntityItself($href)
+			.'" class="'.$class.'">'
+			.ucfirst(html_entity_decode($titleToSet))
+			.'</a>';
 
 		if ($innerHTML)
 		{
@@ -919,11 +898,6 @@ class DynamicMenu
 		}
 		if ($this->navMode == 'get')
 		{
-			if (false && is_dir(self::getLang().'/'.$li['file']))
-			{
-				return self::addToQS('type',$li['file'], self::addToQS('id',$li['file'],$qs));
-			}
-			//echo $li['dir'];
 			$lif = $li['file'];
 			if (is_array($this->end))
 			{
@@ -1206,7 +1180,7 @@ class DynamicMenu
 	{
 
 		if ($lis == null)
-			{
+		{
 			$lis = $this->read3($this->base.(preg_replace('/[.]{1,2}\//i','',$this->homeDir)), $submenu);
 		}
 		$finalLis = array();
