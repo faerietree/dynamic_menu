@@ -697,10 +697,16 @@ class DynamicMenu
 		{
 			$qs = $this->rmFromQSAndAdd('type', false, false, $qs);
 		}
-		if ($this->navMode == 'get')
+		if ($this->navMode != 'get')
+		{
+			return $li['dir'].'/'.$li['file'];
+		}
+		//else
+		if ($this->shortIDs)
 		{
 			$lif = $li['file'];
-			if (is_array($this->end))
+
+			if (!empty(array_filter($this->end)))
 			{
 				foreach ($this->end as $ending)
 				{
@@ -714,34 +720,24 @@ class DynamicMenu
 				}
 				return self::addToQS('type',$li['dir'],self::addToQS('id',$lif,$qs));
 			}
-			else if (is_string($this->end))
+			//else
+			$endings = array('php','php5','php4','html','htm','js','css',
+				'jsp','txt','pdf','ps','class','java','cpp',
+				'c','has','xml','xul','sql','xhtml','tex','lyx');
+			foreach ($endings as $ending)
 			{
-				$lif = preg_replace('/[.]'.$this->end.'/', '', $lif);
-				return self::addToQS('type',$li['dir'],self::addToQS('id',$lif,$qs));
-			}
-			else if ($this->shortIDs)
-			{
-				$endings = array('php','php5','php4','html','htm','js','css',
-					'jsp','txt','pdf','ps','class','java','cpp',
-					'c','has','xml','xul','sql','xhtml','tex','lyx');
-				foreach ($endings as $ending)
+				if (empty($ending))
 				{
-					if (empty($ending))
-					{
-						continue;
-					}
-					//echo $ending.' liFile: '.$lif.'<br />';
-					$lif = preg_replace('/[.]'.$ending.'/', '', $lif);
-					//echo '	&nbsp;lif:'.$lif.'<br /><br />';
+					continue;
 				}
-				return self::addToQS('type',$li['dir'],self::addToQS('id',$lif,$qs));
+				//echo $ending.' liFile: '.$lif.'<br />';
+				$lif = preg_replace('/[.]'.$ending.'/', '', $lif);
+				//echo '	&nbsp;lif:'.$lif.'<br /><br />';
 			}
-			return self::addToQS('type',$li['dir'],self::addToQS('id',$li['file'],$qs));
+			return self::addToQS('type',$li['dir'],self::addToQS('id',$lif,$qs));
 		}
-		else
-		{
-			return $li['dir'].'/'.$li['file'];
-		}
+		//else
+		return self::addToQS('type',$li['dir'],self::addToQS('id',$li['file'],$qs));
 	}
 
 
