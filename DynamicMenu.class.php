@@ -53,9 +53,6 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$base_ = (isset($_GET['b'])) ? $_GET['b'] : true;
 	$base_ = (isset($_GET['base'])) ? $_GET['base'] : $base_;
 
-	// whether evolved or not
-	$evolved_ = isset($_GET['evolved']) ? $_GET['evolved'] : true;
-
 	$orderedMenu_ = isset($_GET['orderedMenu']) ? $_GET['orderedMenu'] : true;
 	// orderIndex or false
 	$orderBy_ = isset($_GET['orderBy']) ? $_GET['orderBy'] : false;
@@ -119,8 +116,7 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$endMode = isset($mode) ? $mode : $endMode;
 	// base in front or not
 	$base = isset($base) ? $base : $base_;
-	// whether evolved or not
-	$evolved = isset($evolved) ? $evolved : $evolved_;
+
 	$orderedMenu = isset($orderedMenu) ? $orderedMenu : $orderedMenu_;  // :=no parameter!
 	$orderBy = isset($orderBy) ? $orderBy : $orderBy_;  // orderIndex or false
 	$orderMode = isset($orderMode) ? $orderMode : $orderMode_;  // sort: {asc|desc}
@@ -144,26 +140,16 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	//echo getcwd();
 	$fs = new DynamicMenu($path, $type, $e, $rec, $maxDepth, $end, $notEnd, $endMode,
 						$base,
-						$evolved, $orderedMenu, $orderBy, $homeAlwaysAtTop,
+						$orderedMenu, $orderBy, $homeAlwaysAtTop,
 						$menuMap, $staticEntries, $orderMode, $shortIDs,
 						$circular, $origin, $radius, $unit
 					);
 	if (!isset($_GET['build']) || ($_GET['build'] != 'off' && $_GET['build'] != false))
 	{
-		if ($evolved)
+		$fs->lis = $fs->buildMenu();
+		if ($renderMenu || ($renderMenu != 'off' && $renderMenu != false))
 		{
-			$fs->lis = $fs->buildMenu();
-			if ($renderMenu || ($renderMenu != 'off' && $renderMenu != false))
-			{
-				$fs->renderMenu();
-			}
-		}
-		else
-		{
-			// already working version, but no menu sorting order or 1click-EN-Switch
-			$fs->build();
-			if (!isset($_GET['render']) || ($_GET['render'] != 'off' && $_GET['render'] != false))
-				$fs->render();
+			$fs->renderMenu();
 		}
 	}
 
@@ -201,7 +187,6 @@ class DynamicMenu
 	private $endMode = 'l';  // Ending Mode is last Ending
 	private $navMode = false; // navMode = 'get' for using GET requests
 
-	private $evolved = true;  // whether menu gets build the evolved way
 	private $orderedMenu = true;  // whether to order the menu or not
 	private $menuMap = false;  // whether a menu not exists or the $menuMap
 	private $orderBy = 'filesize';  // filesize, but poss: {false|title|order(map)}
@@ -233,7 +218,7 @@ class DynamicMenu
 	// ======= CONSTRUCTORS
 	public function __construct($hD, $type, $excs, $rec=false, $maxDepth=2,
 			$end=false, $nEnd=false, $eM=false, $b=false,
-			$evolved=true, $orderedMenu=true, $orderBy='filesize', $homeAlwaysAtTop=true,
+			$orderedMenu=true, $orderBy='filesize', $homeAlwaysAtTop=true,
 			$menuMap=false, $staticEntries=false, $orderMode='asc', $shortIDs = true,
 			$circular=false, $origin=['50%','50%'], $radius=50, $unit='%'
 		)
@@ -310,8 +295,7 @@ class DynamicMenu
 
 		$this->base = dirname(__FILE__);
 
-		// evolved - order by and generate general query string/type-link
-		$this->evolved = $evolved;
+		// order by and generate general query string/type-link
 		$this->orderedMenu = $orderedMenu;
 		$this->orderBy = $orderBy;
 		$this->menuMap = $menuMap;
@@ -328,116 +312,6 @@ class DynamicMenu
 
 	//======= METHODS
 
-	/**
-	Builds a menu according to the settings.
-	*/
-	public function build($results=null,$oVal='')
-	{
-		if ($this->navMode != false)
-			return $this->buildNav();
-		// prep
-		if (substr($this->homeDir,0,3) == '../'
-				&& sizeOf(explode('/',$this->homeDir)) != 0)
-			$oVal = $this->homeDir;
-		if ($results == null)
-			$results = $this->read($this->homeDir);
-		$this->toGiveBack .= '<ul id="depth'.$this->depth.'">'."\n";
-		foreach ($results as $key => $val)
-		{
-			if ($this->end != false
-			&& array_search($this->getEnd($val,$this->endMode),$this->end) == false)
-				continue;
-
-			if ($this->notEnd != false
-			&& array_search($this->getEnd($val,$this->endMode),$this->notEnd) != false)
-				continue;
-
-			// current - marker
-			echo 'val: ' . $val;
-
-			global $filename;
-			$id = $filename;  // id may have been derived in body.tpl.php already
-			if (empty($id))
-				$id = $_GET['id'];
-			$cToSet = '';
-			if (!empty($id) && $id == $val || empty($id) && ($val == $startEN || $val == $startDE) )
-				$cToSet = ' current';
-
-			$this->toGiveBack .= ''
-				.'<li class="nav_li'.$cToSet.'">'
-				.'<a href="../'.$oVal.'/'.$val.'" class="'.$cToSet.'">'
-				.self::toFairy($val).'</a></li>';
-			if ($this->recursive && is_dir($oVal.$val) && $this->depth < $this->maxDepth)
-			{
-				$nOVal = ($oVal[$oVal.length-1]=='/' || $val[0]=='/') ? $oVal.$val : $oVal.'/'.$val;
-				$this->depth++;
-				$this->build($this->read($this->homeDir.'/'.$val),$nOVal);//read() returns results!
-
-			}
-		}
-		$this->toGiveBack .= '</ul>'." \n";
-	}
-
-
-
-	/**
-	GET-VERSION
-	*/
-	public function buildNav($results=null, $oVal='')
-	{
-		global $startEN;
-		global $startDE;
-		if ($this->navMode == false) return $this->build();
-		// prep
-		$this->path = $_SERVER['DOCUMENT_ROOT'].$_SERVER['PHP_SELF'];
-		// fetches all the files/dirs/both..
-		if (substr($this->homeDir,0,3) == '../'
-				&& sizeOf(explode('/',$this->homeDir)) != 0)
-		{
-			$oVal = $this->base.(preg_replace('/[.]{1,2}[/]/i', '', $this->homeDir));
-		}
-		if ($results == null)
-		{
-			$results = $this->read2($this->base.(preg_replace('/[.]{1,2}\//i','',$this->homeDir)));
-		}
-
-		foreach ($results as $val)
-		{
-			if ($this->end != false
-			&& array_search($this->getEnd($val,$this->endMode),$this->end) == false)
-				continue;
-
-			if ($this->notEnd != false
-			&& array_search($this->getEnd($val,$this->endMode),$this->notEnd) != false)
-				continue;
-
-			if (is_dir($this->base.$val) && $this->depth > 0)
-				$val = $oVal.'.'.$val;
-
-			// current - marker
-			global $filename;
-			$id = $filename;  // id may have been derived in body.tpl.php already
-			if (empty($id))
-				$id = $_GET['id'];
-
-			$cToSet = '';
-			if (!empty($id) && $id == $val || empty($id) && ($val == $startEN || $val == $startDE) )
-				$cToSet = ' current';
-
-			$this->toGiveBack .= '' //former $this->path -->$_SERVER['PHP_SELF']
-				.'<li class="nav_li '.$cToSet.'">'
-				.'<a href="'.$_SERVER['PHP_SELF'].self::addToQS('id',$val).'"'
-				.' class="'.$cToSet.'">'.self::toFairy($val).'</a></li>';
-			if ($this->recursive && is_dir($this->base.$val) && $this->depth < $this->maxDepth)
-			{
-				$this->depth++;
-				$this->buildNav($this->read2($this->base.$val), $val);//read2() returns results!
-			}
-		}
-		$this->toGiveBack .= '</ul>'." \n";
-	}
-
-
 
 	/**
 	backHome (ET:)
@@ -446,79 +320,6 @@ class DynamicMenu
 	{
 		// Create dir object for current home directory
 		$this->d = dir($this->homeDir);
-	}
-
-
-
-	/**
-	read
-	*/
-	public function read($path)
-	{
-		$d = dir($path);
-		$results = array();
-
-		while (($entry = $d->read()) !== false)
-		{
-			if (is_dir($entry) && $this->dir && array_search($entry,$this->exceptions) == false
-				|| !is_dir($entry) && $this->files && !array_search($entry,$this->exceptions))
-			{
-				$results[] = $entry;
-			}
-		}
-		$d->close();
-		$this->results[] = $results;
-		return $results;
-	}
-
-
-
-	/**
-	r
-	*/
-	public function r($path)
-	{
-		$d = dir($path);
-		$results = array();
-
-		while (($entry = $d->read()) !== false)
-		{
-			if (is_dir($entry) && $this->dir && array_search($entry,$this->exceptions) == false
-				|| !is_dir($entry) && $this->files && !array_search($entry,$this->exceptions))
-			{
-				$results[] = $path.$entry;
-			}
-		}
-		$d->close();
-		foreach ($results as $val)
-			$this->res[] = $val;
-		return $results;
-	}
-
-
-
-	/**
-	read2
-	*/
-	public function read2($path)
-	{
-		$d = dirname(__FILE__);
-		//echo '####'.realpath('../');
-		//echo $d;
-		$d = dir($d);
-		$results = array();
-
-		while (($entry = $d->read()) !== false)
-		{
-			if (is_dir($entry) && $this->dir && array_search($entry,$this->exceptions) == false
-				|| !is_dir($entry) && $this->files && !array_search($entry,$this->exceptions))
-			{
-				$results[] = $entry;
-			}
-		}
-		$d->close();
-		$this->results[] = $results;
-		return $results;
 	}
 
 
@@ -1173,7 +974,7 @@ class DynamicMenu
 
 	/**
 	buildMenu
-	dynamic menu evolved
+	dynamic menu
 	EVOLVED GET-VERSION [with ORDER options]
 	*/
 	public function buildMenu($lis = null, $oVal='', $submenu = false, $dirfound_one_level_higher = null)
@@ -1433,7 +1234,7 @@ class DynamicMenu
 
 	/**
 	* renderMenu
-	* finally 'outputs' the evolved dynamic menu
+	* finally 'outputs' the dynamic menu
 	*/
 	function renderMenu()
 	{
