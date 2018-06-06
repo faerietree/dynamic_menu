@@ -528,15 +528,26 @@ class DynamicMenu
 		if ($this->menuMap && is_array($this->menuMap))
 		{
 			$li['order'] = 1000;
+			$langAndTitle = getLang().'__'.$title;
 			// short cuts => 1click-LanguageSwitch-AndGetCorrectPage
 			if (in_array($title, $this->menuMap))
 			{
 				$li['order'] = array_keys($this->menuMap, $title);
 				$li['order'] = $li['order'][0];
 			}
+			else if (in_array($langAndTitle, $this->menuMap))
+			{
+				$li['order'] = array_keys($this->menuMap, $langAndTitle);
+				$li['order'] = $li['order'][0];
+			}
 			else if (isset($this->menuMap[$title]))
 			{
 				$li['order'] = array_keys($this->menuMap, $this->menuMap[$title]);
+				$li['order'] = $li['order'][0];
+			}
+			else if (isset($this->menuMap[$langAndTitle]))
+			{
+				$li['order'] = array_keys($this->menuMap, $this->menuMap[$langAndTitle]);
 				$li['order'] = $li['order'][0];
 			}
 			// filename with ending
@@ -1305,7 +1316,7 @@ class DynamicMenu
 			''.$string.'';
 		$string = trim($string);
 		$string .= ' ';
-		$beforePoint = explode('.', substr($string, 1));
+		$beforePoint = explode('.', $string);
 
 		$remain = explode('__', $beforePoint[0]);
 		if (count($remain) > 1)
