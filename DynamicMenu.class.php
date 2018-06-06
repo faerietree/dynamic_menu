@@ -706,6 +706,18 @@ class DynamicMenu
 		{
 			$lif = $li['file'];
 
+			// remove language prefix
+			$parts = explode('__', $lif);
+			$lang =
+			$language = getLang();
+			if (count($parts) > 1)
+			{
+				$lang = $parts[0];
+				$lif = $parts[1];
+			}
+			if ($lang != $language)
+				return;
+
 			if (!empty(array_filter($this->end)))
 			{
 				foreach ($this->end as $ending)
@@ -989,6 +1001,20 @@ class DynamicMenu
 			&& $liEnd && !empty($liEnd))
 				continue;
 
+			// filter by language
+			$parts = explode('__', $li['file']);
+			$mParts = explode('__', basename($li['pathTo']));
+			$lang =
+			$language = getLang();
+			if (count($parts) > 1)
+				$lang = $parts[0];
+			else if (count($mParts) > 1)
+				$lang = $mParts[0];
+			//echo $lang . '!='. $language. ' '.$li['file'].'<br>';
+			if ($lang != $language)
+				continue;
+
+			// filter by ending
 			if ($this->notEnd != false
 			&& array_search($this->getEnd($li['pathTo'],$this->endMode),$this->notEnd) != false)
 				continue;
@@ -1018,17 +1044,17 @@ class DynamicMenu
 			{
 				$dirfound = $this->base.'/'.$li['pathTo'];
 			}
-			elseif (is_dir($this->base.(self::getLang()).'/'.$li['pathTo']))
+			elseif (is_dir($this->base.(getLang()).'/'.$li['pathTo']))
 			{
-				$dirfound = $this->base.(self::getLang()).'/'.$li['pathTo'];
+				$dirfound = $this->base.(getLang()).'/'.$li['pathTo'];
 			}
 			elseif (is_dir(dirname(__FILE__).'/'.$li['pathTo']))
 			{
 				$dirfound = dirname(__FILE__).'/'.$li['pathTo'];
 			}
-			elseif (is_dir(self::getLang().'/'.$li['pathTo']))
+			elseif (is_dir(getLang().'/'.$li['pathTo']))
 			{
-				$dirfound = self::getLang().$li['pathTo'];
+				$dirfound = getLang().$li['pathTo'];
 			}
 
 			if ($dirfound_one_level_higher != null && $dirfound == $dirfound_one_level_higher)
@@ -1188,7 +1214,7 @@ class DynamicMenu
 		//else echo 'cond.: false ('.$_GET['type'].')<br /><br />';
 		$isChild = $motherLi !== false;
 		$out .= $motherLi ? $this->getLi('', $cToS, $motherLi, $isChild).$motherLi['innerHTML'] : '';
-		$out .= $this->getUl('depth'.$level, 'nav_ul'.$cToS, 'notype');
+		$out .= $this->getUl('depth'.$level, 'nav nav_ul'.$cToS, 'notype');
 		$deeper = false;
 
 		foreach ($lisSub as $li)
@@ -1279,13 +1305,23 @@ class DynamicMenu
 			''.$string.'';
 		$string = trim($string);
 		$string .= ' ';
-		$beforePoint = explode('.', substr($string, 1, strlen($string) - 1));
-		// TODO Handle __
-		$remain = explode('_', $beforePoint[0]);
+		$beforePoint = explode('.', substr($string, 1));
+
+		$remain = explode('__', $beforePoint[0]);
+		if (count($remain) > 1)
+		{
+			$lang = $remain[0];
+			$remain = $remain[1];
+		}
+		else
+			$remain = $remain[0];
+
+		$remain = explode('_', $remain);
 
 		// more universal approach
-		$fairy = strtoupper($string[0]).$remain[0];
-		for ($i = 1; $i < sizeOf($remain); $i++)
+		$s = $remain[0];
+		$fairy = strtoupper($s[0]).substr($s, 1);
+		for ($i = 1; $i < count($remain); $i++)
 		{
 			$word = $remain[$i];
 			if (empty($word))
@@ -1564,18 +1600,6 @@ class DynamicMenu
 		}
 		return $GETParamPlusHtml;
 	}
-
-
-
-	/**
-	* self::getLang
-	* Ermittelt die gesetzte Sprache
-	*/
-	public static function getLang()
-	{
-		return (isset($_GET['lang']) && $_GET['lang'] == 'en' ? 'en' : 'de');
-	}
-
 
 
 
