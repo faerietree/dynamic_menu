@@ -870,8 +870,10 @@ class DynamicMenu
 
 		// homeAlwaysAtTop?
 		if ($this->homeAlwaysAtTop !== false && $this->homeAlwaysAtTop !== 'false'
-			&& (isset($startDE) || isset($startEN))
-			&& ($this->inLis($startEN, $lis) || $this->inLis($startDE, $lis)))
+			&& (isset($startDE) && $this->inLis($startDE, $lis)
+				|| isset($startEN) && $this->inLis($startEN, $lis)
+			)
+			)
 		{
 			$homeli = false;
 			// home li suchen
@@ -880,6 +882,19 @@ class DynamicMenu
 			for ($i = 1; $i < $lisL; $i++)
 			{
 				$ili = $lis[$i];
+				// filter by language
+				$parts = explode('__', $ili['file']);
+				$mParts = explode('__', basename($ili['pathTo']));
+				$lang =
+				$language = getLang();
+				if (count($parts) > 1)
+					$lang = $parts[0];
+				else if (count($mParts) > 1)
+					$lang = $mParts[0];
+				//echo $lang . '!='. $language. ' '.$ili['file'].'<br>';
+				if ($lang != $language)
+					continue;
+
 				// home li gefunden?
 				if ($schatz['file'] != false
 					&& ($schatz['file'] == $startDE || $schatz['file'] == $startEN))
@@ -912,11 +927,13 @@ class DynamicMenu
 	*/
 	function inLis($needles, $haystack, $mode = 'or')
 	{
+//echo '<br>'."\n\r";
 		if (!is_array($needles))
 		{
 			$needle = $needles;
 			foreach ($haystack as $li)
 			{
+//echo $li['file'] .'=='.$needle . '<br>';
 				if ($li['file'] == $needle)
 				{
 					return true;
