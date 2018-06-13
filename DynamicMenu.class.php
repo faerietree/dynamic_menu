@@ -561,6 +561,17 @@ class DynamicMenu
 				$li['order'] = array_keys($this->menuMap, $this->menuMap[$li['file']]);
 				$li['order'] = $li['order'][0];
 			}
+			else if (strpos($li['file'], 'index') !== false)
+			{
+				$menuMapPos = 0;
+				foreach ($this->menuMap as $menuMapItemKey => $menuMapItem)
+				{
+					if (strpos($li['dir'], $menuMapItemKey) !== false
+							|| strpos($li['dir'], $menuMapItem) !== false)
+						$li['order'] = $menuMapPos;
+					++$menuMapPos;
+				}
+			}
 		}
 
 		if (isset($_GET[$li['title']]))
