@@ -27,6 +27,7 @@ $e = array(
 	'body.tpl.php',
 	'top.tpl.php',
 	'bottom.tpl.php',
+	'footer.php',
 	'foot.tpl.php',
 	'files',
 	'images',
@@ -64,6 +65,7 @@ $e = array(
 ,'fitness_stall'
 ,'fitness_stall.git'
 ,'hamag'
+,'hamag_site'
 ,'hamag_t3'
 ,'hamag_t3template'
 ,'img'
@@ -99,20 +101,17 @@ $homeAlwaysAtTop = true;
 $translate = true;
 // To get 1click-language-switch to work even with distinct file
 // names per language: uncomment, map the corresponding files:
+/*
 $translate = array(
-	'wax_extractor'=>'Wachsschleuder',
-	'steam_generator'=>'Dampfgenerator',
-	'honey_harvest_machine'=>'Honigerntemaschine',
-	'wax_decapping_machine'=>'Entdeckelungsmaschine',
-	'prices'=>'Preise',
+	'en_file'=>'de_file','english'=>'englisch','german'=>'deutsch'
 );
-
+*/
 
 
 # STATIC MENU ENTRIES (e.g. http://<server>.<ending>)
 $staticEntries = array(
 	//'static file'=>'./.hidden_file.ending'
-	'shop'=>'https://shop.hamag-maschinenbau.de'
+	//'shop'=>'https://shop.hamag-maschinenbau.de'
 );
 if (isset($language) && $language == 'en') {
 	//$staticEntries = array('static entry'=>'http://server.ip/');
