@@ -137,7 +137,7 @@ if (!isset($_GET['auto']) && !isset($auto) || ($_GET['auto'] != 'off' && $auto !
 	$radius = isset($radius) ? $radius : $radius_;
 	$unit = isset($unit) ? $unit : $unit_;
 
-	//echo getcwd();
+	//echo getcwd() . ' vs. path: ' .$path;
 	$fs = new DynamicMenu($path, $type, $e, $rec, $maxDepth, $end, $notEnd, $endMode,
 						$base,
 						$orderedMenu, $orderBy, $homeAlwaysAtTop,
@@ -224,7 +224,8 @@ class DynamicMenu
 		)
 	{
 		$this->path = $this->homeDir = $hD;			 // home_dir required
-		$this->base = ($b != false ? $_SERVER['DOCUMENT_ROOT'] : '');
+		if (substr($this->path, 0, 1) != '/')
+			$this->base = ($b != false ? $_SERVER['DOCUMENT_ROOT'] : '');
 		$this->circular = $circular;
 		$this->origin = $origin;
 		$this->radius = $radius;
@@ -293,7 +294,8 @@ class DynamicMenu
 		}
 
 
-		$this->base = dirname(__FILE__);
+		if (substr($this->path, 0, 1) != '/')
+			$this->base = dirname(__FILE__);
 
 		// order by and generate general query string/type-link
 		$this->orderedMenu = $orderedMenu;
@@ -1029,6 +1031,8 @@ class DynamicMenu
 
 		if ($lis == null)
 		{
+			//echo 'homeDir: ' . $this->homeDir. '<br/>';
+			//echo 'base: ' . $this->base. '<br/>';
 			$lis = $this->read3($this->base.(preg_replace('/[.]{1,2}\//i','',$this->homeDir)), $submenu);
 		}
 		$finalLis = array();
@@ -1136,6 +1140,7 @@ class DynamicMenu
 		$d = dirname(__FILE__);
 		if ($dirpath)
 		{
+			//echo $dirpath;
 			if (is_file($dirpath) && !is_dir($dirpath))
 			{
 				$dirpath = dirname($dirpath);
