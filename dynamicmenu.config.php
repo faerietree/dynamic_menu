@@ -12,42 +12,7 @@ $startDE = 'index.php';
 
 # EXCEPTIONS
 $e = array(
-	'index.php',
-	'db.inc.php',
-	'dynamicmenu.config.php',
-	'dynamicmenu.cfg.php',
-	'Archive',
-	'archive',
-	'impressum.html',
-	'sonstiges.html',
-	'other_information.html',
-	'DynamicMenu.class.php',
-	'error.php',
-	'error404.php',
-	'body.tpl.php',
-	'top.tpl.php',
-	'bottom.tpl.php',
-	'footer.php',
-	'foot.tpl.php',
-	'files',
-	'images',
-	'README',
-	'README.md',
-	'LICENSE',
-	'LICENSE.txt'
-	,'present'
-// Not related files from root directory (where ciry.at points to for short file reference)
-,'0ad'
-,'cloudy'
-,'pepper'
-,'music.git'
-,'fonts'
-,'DynamicMenu.class.php'
-,'Endor'
-,'FairyTale'
-,'Img'
-,'SevenHorses'
-,'SevenMagics'
+'0ad'
 ,'ai-client-html'
 ,'ai-typo3'
 ,'ai-vat'
@@ -58,23 +23,58 @@ $e = array(
 ,'angelika_hirschberg'
 ,'angelika_hirschberg_site'
 ,'angelika_hirschberg_t3template'
+,'Archive'
+,'archive'
+,'body.tpl'
+,'bottom.tpl'
 ,'cgi-bin'
+,'cloudy'
+,'db.inc.php'
+,'dynamicmenu.config'
+,'dynamicmenu.cfg'
+,'DynamicMenu.class'
 ,'dynamic_menu'
 ,'dynamic_site'
-,'dynamicmenu.config.php'
+,'DynamicMenu.class'
+,'Endor'
+,'error'
+,'error404'
+,'FairyTale'
+,'fileadmin'
+,'files'
 ,'fitness_stall'
 ,'fitness_stall.git'
+,'fonts'
+,'footer'
+,'foot.tpl'
+,'gallery-css'
 ,'hamag'
 ,'hamag_site'
 ,'hamag_t3'
 ,'hamag_t3template'
+,'images'
+,'Img'
 ,'img'
-,'index.html'
+,'impressum'
+,'index'
+,'LICENSE'
+,'logs'
 ,'lohtax'
 ,'lohtax_t3template'
+,'media'
+,'music.git'
 ,'quadzz'
-,'robots.txt'
+,'README'
+,'robots'
+,'sonstiges'
+,'other_information'
+,'pepper'
+,'present'
+,'SevenHorses'
+,'SevenMagics'
+,'top.tpl'
 ,'treasury'
+,'uploads'
 ,'web'
 ,'wp'
 );
@@ -89,7 +89,7 @@ $path = './';
 $type = 'allget'; # {all|files|dir}get <=> what to phpInclude
 $circular = true;
 $origin = ['38%', '48%'];
-$radius = 24;
+$radius = 23;
 $unit = '%';
 
 
@@ -133,14 +133,6 @@ if (!empty($startEN) && !$startDE) {
 }
 else if (!empty($startDE) && !$startEN) {
 	$start = $startDE;
-}
-
-
-
-// Handle menu map and translate separately or not:
-if (isset($menuMap)
-&& (!isset($translate) || !empty($translate) || $translate === true)) {
-	$translate = $menuMap;
 }
 
 
