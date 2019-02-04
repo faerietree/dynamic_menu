@@ -604,6 +604,8 @@ class DynamicMenu
 		}
 
 		// Update: recognize file as current even though html entities in filename
+		global $directory;
+		$dirSanitized = strtolower(str_replace('/', '', $directory));
 		global $filename;
 		$id = $filename;  // id may have been derived in body.tpl.php already
 		if (empty($id))
@@ -613,13 +615,15 @@ class DynamicMenu
 			));
 		}
 
-		//echo ''.strtolower($id).' == '.strtolower($li['title']).' == '.strtolower($li['file']).'<br />';
+		//echo ''.strtolower($id).' == '.strtolower($li['title']).' == '.strtolower($li['file']).'  == directory: '.$dirSanitized.' <br />';
 		if (!empty($id) && !$staticCond
 			&& (
 				(strtolower($id) == strtolower($li['title']))
 				|| strtolower($id) == strtolower($li['file'])
 			)
 			|| empty($id) && in_array($li['file'], $startPages) && !$staticCond
+			|| strtolower($id) == 'index' && !empty($directory) && !$staticCond
+				&& ($dirSanitized == $li['file'] || $dirSanitized == $li['title'])
 			|| !empty($_GET[$li['title']]) && !$staticCond
 			|| !empty($_GET['type']) && !$staticCond
 				&& ($_GET['type'] == $li['file'] || $_GET['type'] == $li['title'])
@@ -1028,7 +1032,6 @@ class DynamicMenu
 	*/
 	public function buildMenu($lis = null, $oVal='', $submenu = false, $dirfound_one_level_higher = null)
 	{
-
 		if ($lis == null)
 		{
 			//echo 'homeDir: ' . $this->homeDir. '<br/>';
@@ -1038,14 +1041,8 @@ class DynamicMenu
 		$finalLis = array();
 		foreach ($lis as $li)
 		{
-			$liEnd = $this->getEnd($li['pathTo']);
-			if ($this->end != false
-			&& (array_search($this->getEnd($li['pathTo'],$this->endMode),$this->end) == false)
-			&& $liEnd && !empty($liEnd))
-				continue;
-
 			// filter by language
-			$parts = explode('__', $li['file']);
+			$parts = explode('__', $entry);
 			$mParts = explode('__', basename($li['pathTo']));
 			$lang =
 			$language = getLang();
@@ -1055,11 +1052,6 @@ class DynamicMenu
 				$lang = $mParts[0];
 			//echo $lang . '!='. $language. ' '.$li['file'].'<br>';
 			if ($lang != $language)
-				continue;
-
-			// filter by ending
-			if ($this->notEnd != false
-			&& array_search($this->getEnd($li['pathTo'],$this->endMode),$this->notEnd) != false)
 				continue;
 
 			$finalLis[] = $li;
@@ -1140,7 +1132,7 @@ class DynamicMenu
 		$d = dirname(__FILE__);
 		if ($dirpath)
 		{
-			//echo $dirpath;
+			//echo 'dirpath: ' . $dirpath;
 			if (is_file($dirpath) && !is_dir($dirpath))
 			{
 				$dirpath = dirname($dirpath);
@@ -1157,22 +1149,30 @@ class DynamicMenu
 
 		while (($entry = $d->read()) !== false)
 		{
-			$ending = $this->getEnd($entry);
+			$ending = $this->getEnd($entry, $this->endMode);
+			$filename = $entry;
+			if (!empty($ending))
+			{
+				if ($this->end != false && array_search($ending, $this->end) === false
+						|| $this->notEnd != false && array_search($ending, $this->notEnd) !== false)
+					continue;
+				$filename = str_replace('.' . $ending, '', $entry);
+				#echo $filename;
+			}
+
 			$firstChar = substr($entry, 0, 1);
 			if (array_search($firstChar, $this->hiddenIndicators) !== false)
 			{
 				continue; #=> file shall not occur in (dynamic) menu
 			}
-			if (is_dir($entry)
-					&& $this->dir && array_search($entry,$this->exceptions) == false
-					|| !is_dir($entry) && $ending != false && $ending != ''
-					&& $this->files && !array_search($entry,$this->exceptions))
+
+			// Currently case sensitive to allow for a Index to show in the menu while index.php remains hidden.
+			if (is_dir($entry) && $this->dir && array_search($entry,$this->exceptions) === false
+					|| !is_dir($entry) && $this->files && array_search($filename, $this->exceptions) === false)
 			{
 				//echo $entry."\n";
 				//echo $this->dir ? ' true ' : ' false';
 				//buildLi - $title, $pathTo, ...
-				$filename = str_replace('.'.$this->getEnd($entry), '', $entry);
-				#echo $filename;
 				$classToSet = 'inline';
 				if ($this->depth > 0)
 				{
