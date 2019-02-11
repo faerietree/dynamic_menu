@@ -231,9 +231,9 @@ class DynamicMenu
 		$this->radius = $radius;
 		$this->unit = $unit;
 
-		if (substr($this->homeDir,0,3) == '../' && sizeOf(explode('/',$this->homeDir)) == 0)
+		if (substr($this->path, 0, 3) == '../' && sizeOf(explode('/',$this->path)) == 0)
 		{
-			chdir($this->homeDir);
+			chdir($this->path);
 		}
 		//echo 'Type: '.$type;
 		//echo getcwd();
@@ -1035,8 +1035,9 @@ class DynamicMenu
 		if ($lis == null)
 		{
 			//echo 'homeDir: ' . $this->homeDir. '<br/>';
+			//echo 'path: ' . $this->path. '<br/>';
 			//echo 'base: ' . $this->base. '<br/>';
-			$lis = $this->read3($this->base.(preg_replace('/[.]{1,2}\//i','',$this->homeDir)), $submenu);
+			$lis = $this->read3($this->base.'/'.(preg_replace('/[.]{1,2}\//i','',$this->path)), $submenu);
 		}
 		$finalLis = array();
 		foreach ($lis as $li)
@@ -1066,30 +1067,25 @@ class DynamicMenu
 		foreach ($finalLis as $key => $li)
 		{
 			//echo $key .' -> '. $li.' pathTo='.$li['pathTo'] .'<br/>';
-			if ($li == null || !isset($li) || empty($li) || $li['file'] == null /*hence pathTo points to the motherDir => endless recursion*/
-					|| !isset($li['pathTo']) || empty($li['pathTo']))
+			if (empty($li) || empty($li['file']) /*hence pathTo points to the motherDir => endless recursion*/
+					|| empty($li['pathTo']))
 			{
 				continue;
 			}
+			//echo 'li: ';
 			//print_r($li);
 			// because only once per level.
 			//$deeper = false;
 			$dirfound = false;
-			if (is_dir($this->base.'/'.$li['pathTo']))
+			$prefix = $this->getPrefix();
+			//echo 'prefix: ' . $prefix . ' is_dir: ' . intval(is_dir($this->getPrefix() . '/' . $li['pathTo'])) . ' ';
+			if (is_dir($prefix . $li['pathTo']))
 			{
-				$dirfound = $this->base.'/'.$li['pathTo'];
+				$dirfound = $prefix . $li['pathTo'];
 			}
-			elseif (is_dir($this->base.(getLang()).'/'.$li['pathTo']))
+			elseif (is_dir($prefix . getLang() . '/' . $li['pathTo']))
 			{
-				$dirfound = $this->base.(getLang()).'/'.$li['pathTo'];
-			}
-			elseif (is_dir(dirname(__FILE__).'/'.$li['pathTo']))
-			{
-				$dirfound = dirname(__FILE__).'/'.$li['pathTo'];
-			}
-			elseif (is_dir(getLang().'/'.$li['pathTo']))
-			{
-				$dirfound = getLang().$li['pathTo'];
+				$dirfound = $prefix . getLang() . '/' . $li['pathTo'];
 			}
 
 			if ($dirfound_one_level_higher != null && $dirfound == $dirfound_one_level_higher)
@@ -1120,6 +1116,13 @@ class DynamicMenu
 		//print_r($finalLis);
 		//echo '<br />';
 		return $finalLis;
+	}
+
+
+
+	public function getPrefix()
+	{
+		return $this->base . '/' . $this->path . '/';
 	}
 
 
@@ -1157,7 +1160,7 @@ class DynamicMenu
 						|| $this->notEnd != false && array_search($ending, $this->notEnd) !== false)
 					continue;
 				$filename = str_replace('.' . $ending, '', $entry);
-				#echo $filename;
+				//echo 'filename: ' . $filename . "<br/>\n";
 			}
 
 			$firstChar = substr($entry, 0, 1);
