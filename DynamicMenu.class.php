@@ -424,8 +424,8 @@ class DynamicMenu
 	/**
 	* generateLi
 	* also need an attribute called depth to save the depth of nested menus
-	* @param $title meist Datei-Name toFairy() oder mapped English Title
-	* @param $pathTo Dateiname ...
+	* @param $title Filename or static entry key
+	* @param $pathTo filename + ending
 	* @param $class li-Klasse(n) [optional]
 	* @param innerHTML innerHTML z.B. <span>Good evening!</span> [optional]
 	*/
@@ -444,7 +444,17 @@ class DynamicMenu
 			&& (isset($this->staticEntries[$title]) || in_array($pathTo,$this->staticEntries));
 
 		// build LI
+		$li['filename'] = $title;
+		$filename = $title;  // may be equal
+
 		$li['title'] = $title;
+		$ar = explode('__', $title);
+		if (count($ar) > 1 && strlen($ar[0]) == 2)
+		{
+			$li['lang'] = $ar[0];
+			$title =
+			$li['title'] = $ar[1];
+		}
 
 		$li['pathTo'] = $pathTo;
 		$dirsAndFile = explode('/', $pathTo);
@@ -530,38 +540,33 @@ class DynamicMenu
 		if ($this->menuMap && is_array($this->menuMap))
 		{
 			$li['order'] = 1000;
-			$langAndTitle = getLang().'__'.$title;
 			// short cuts => 1click-LanguageSwitch-AndGetCorrectPage
 			if (in_array($title, $this->menuMap))
 			{
 				$li['order'] = array_keys($this->menuMap, $title);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_search($li['order'][0], array_keys($this->menuMap));
 			}
-			else if (in_array($langAndTitle, $this->menuMap))
+			else if (array_key_exists($title, $this->menuMap))
 			{
-				$li['order'] = array_keys($this->menuMap, $langAndTitle);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_search($title, array_keys($this->menuMap));
 			}
-			else if (isset($this->menuMap[$title]))
+			else if (in_array($filename, $this->menuMap))
 			{
-				$li['order'] = array_keys($this->menuMap, $this->menuMap[$title]);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_keys($this->menuMap, $filename);
+				$li['order'] = array_search($li['order'][0], array_keys($this->menuMap));
 			}
-			else if (isset($this->menuMap[$langAndTitle]))
+			else if (isset($this->menuMap[$filename]))
 			{
-				$li['order'] = array_keys($this->menuMap, $this->menuMap[$langAndTitle]);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_search($filename, array_keys($this->menuMap));
 			}
-			// filename with ending
 			else if (in_array($li['file'], $this->menuMap))
 			{
 				$li['order'] = array_keys($this->menuMap, $li['file']);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_search($li['order'][0], array_keys($this->menuMap));
 			}
 			else if (isset($this->menuMap[$li['file']]))
 			{
-				$li['order'] = array_keys($this->menuMap, $this->menuMap[$li['file']]);
-				$li['order'] = $li['order'][0];
+				$li['order'] = array_search($li['file'], array_keys($this->menuMap));
 			}
 			else if (strpos($li['file'], 'index') !== false)
 			{
@@ -574,6 +579,7 @@ class DynamicMenu
 					++$menuMapPos;
 				}
 			}
+			//echo 'li: ' . $title . ' order: ' . $li['order'] . "<br/>\n";
 		}
 
 		if (isset($_GET[$li['title']]))
@@ -618,12 +624,13 @@ class DynamicMenu
 		//echo ''.strtolower($id).' == '.strtolower($li['title']).' == '.strtolower($li['file']).'  == directory: '.$dirSanitized.' <br />';
 		if (!empty($id) && !$staticCond
 			&& (
-				(strtolower($id) == strtolower($li['title']))
+				strtolower($id) == strtolower($li['title'])
+				|| strtolower($id) == strtolower($li['filename'])
 				|| strtolower($id) == strtolower($li['file'])
 			)
 			|| empty($id) && in_array($li['file'], $startPages) && !$staticCond
 			|| strtolower($id) == 'index' && !empty($directory) && !$staticCond
-				&& ($dirSanitized == $li['file'] || $dirSanitized == $li['title'])
+				&& ($dirSanitized == $li['file'] || $dirSanitized == $li['filename'] || $dirSanitized == $li['title'])
 			|| !empty($_GET[$li['title']]) && !$staticCond
 			|| !empty($_GET['type']) && !$staticCond
 				&& ($_GET['type'] == $li['file'] || $_GET['type'] == $li['title'])
@@ -655,25 +662,6 @@ class DynamicMenu
 		{
 			$href = $this->getLiAHref($li);
 			$titleToSet = self::toFairy($li['title']);
-		}
-
-		if ($this->menuMap)
-		{
-			// get keys as numeric and(?) string
-			//$titleArK = array_keys($li['title']);
-			//$fileArK = array_keys($li['file']);
-			$tArVal = false;
-			if (isset($this->menuMap[$li['title']]))
-			{
-				$tArVal = $this->menuMap[$li['title']];
-			}
-			$fArVal = false;
-			if (isset($this->menuMap[$li['file']]))
-			{
-				$fArVal = $this->menuMap[$li['file']];
-			}
-			// TODO somehow use the above to translate and retranslate
-			// Goal: Ending no longer needed.
 		}
 
 		//$href = self::addToQS('type',$li['dir'],self::addToQS('id',$li['file'],$qs));
@@ -1431,9 +1419,9 @@ class DynamicMenu
 		// current - marker
 		if (isset($_GET['id'])
 			&& (
-				(strtolower($_GET['id']) == strtolower($li['title']))
-				||
-				strtolower($_GET['id']) == strtolower($li['file'])
+				strtolower($_GET['id']) == strtolower($li['title'])
+				|| strtolower($_GET['id']) == strtolower($li['filename'])
+				|| strtolower($_GET['id']) == strtolower($li['file'])
 			)
 			|| !isset($_GET['id']) && in_array($li['file'], $startPages) && !$isChild
 		)
